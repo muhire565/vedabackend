@@ -3,6 +3,7 @@ const HealthTracker = require('../models/HealthTracker');
 const WorkoutPlan = require('../models/WorkoutPlan');
 const Meal = require('../models/Meal');
 const Recipe = require('../models/Recipe');
+const Resource = require('../models/Resource');
 
 // @route   GET /api/admin/users
 // @desc    Get all users
@@ -176,6 +177,8 @@ const getSystemStats = async (req, res) => {
     const onboardedUsers = await User.countDocuments({ onboardingCompleted: true });
     const totalWorkoutPlans = await WorkoutPlan.countDocuments();
     const totalMeals = await Meal.countDocuments();
+    const totalRecipes = await Recipe.countDocuments();
+    const totalResources = await Resource.countDocuments();
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -206,6 +209,8 @@ const getSystemStats = async (req, res) => {
           newUsersToday,
           totalWorkoutPlans,
           totalMeals,
+          totalRecipes,
+          totalResources,
           usersByMonth: usersByMonth.map((item) => ({
             month: `${item._id.year}-${String(item._id.month).padStart(2, '0')}`,
             count: item.count,
@@ -385,6 +390,157 @@ const deleteRecipe = async (req, res) => {
   }
 };
 
+// @route   GET /api/admin/resources
+// @desc    Get all educational resources
+// @access  Admin
+const getAllResources = async (req, res) => {
+  try {
+    const resources = await Resource.find().sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      data: {
+        resources: resources.map((r) => ({
+          id: r._id.toString(),
+          title: r.title,
+          description: r.description,
+          type: r.type,
+          category: r.category,
+          content: r.content,
+          thumbnail: r.thumbnail,
+          videoUrl: r.videoUrl,
+          duration: r.duration,
+          author: r.author,
+          tags: r.tags,
+          featured: r.featured,
+          views: r.views,
+          likes: r.likes,
+          published: r.published,
+          publishedAt: r.publishedAt,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('Get all resources error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch resources' });
+  }
+};
+
+// @route   POST /api/admin/resources
+// @desc    Create an educational resource
+// @access  Admin
+const createResource = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      type,
+      category,
+      content,
+      thumbnail,
+      videoUrl,
+      duration,
+      author,
+      tags,
+      featured,
+      published,
+    } = req.body;
+
+    const resource = new Resource({
+      title,
+      description,
+      type: type || 'article',
+      category: category || 'fitness',
+      content: content || '',
+      thumbnail: thumbnail || '',
+      videoUrl: videoUrl || '',
+      duration: parseInt(duration) || 0,
+      author: author || 'Medifit AI Team',
+      tags: Array.isArray(tags) ? tags : [],
+      featured: !!featured,
+      published: typeof published === 'boolean' ? published : true,
+    });
+
+    await resource.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Resource created successfully',
+      data: { resource },
+    });
+  } catch (error) {
+    console.error('Admin create resource error:', error);
+    res.status(500).json({ success: false, message: 'Failed to create resource' });
+  }
+};
+
+// @route   PUT /api/admin/resources/:id
+// @desc    Update an educational resource
+// @access  Admin
+const updateResource = async (req, res) => {
+  try {
+    const resource = await Resource.findById(req.params.id);
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found' });
+    }
+
+    const {
+      title,
+      description,
+      type,
+      category,
+      content,
+      thumbnail,
+      videoUrl,
+      duration,
+      author,
+      tags,
+      featured,
+      published,
+    } = req.body;
+
+    if (title !== undefined) resource.title = title;
+    if (description !== undefined) resource.description = description;
+    if (type) resource.type = type;
+    if (category) resource.category = category;
+    if (content !== undefined) resource.content = content;
+    if (thumbnail !== undefined) resource.thumbnail = thumbnail;
+    if (videoUrl !== undefined) resource.videoUrl = videoUrl;
+    if (duration !== undefined) resource.duration = parseInt(duration);
+    if (author !== undefined) resource.author = author;
+    if (tags) resource.tags = Array.isArray(tags) ? tags : [];
+    if (typeof featured === 'boolean') resource.featured = featured;
+    if (typeof published === 'boolean') resource.published = published;
+
+    await resource.save();
+
+    res.json({ success: true, message: 'Resource updated successfully', data: { resource } });
+  } catch (error) {
+    console.error('Admin update resource error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update resource' });
+  }
+};
+
+// @route   DELETE /api/admin/resources/:id
+// @desc    Delete an educational resource
+// @access  Admin
+const deleteResource = async (req, res) => {
+  try {
+    const resource = await Resource.findById(req.params.id);
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found' });
+    }
+
+    await Resource.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: 'Resource deleted successfully' });
+  } catch (error) {
+    console.error('Admin delete resource error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete resource' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -395,4 +551,8 @@ module.exports = {
   createRecipe,
   updateRecipe,
   deleteRecipe,
+  getAllResources,
+  createResource,
+  updateResource,
+  deleteResource,
 };

@@ -19,6 +19,7 @@ const analyticsRoutes = require('./routes/analytics');
 const deviceRoutes = require('./routes/devices');
 const notificationRoutes = require('./routes/notifications');
 const userRoutes = require('./routes/user');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;

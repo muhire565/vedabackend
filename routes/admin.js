@@ -12,6 +12,10 @@ const {
   createRecipe,
   updateRecipe,
   deleteRecipe,
+  getAllResources,
+  createResource,
+  updateResource,
+  deleteResource,
 } = require('../controllers/adminController');
 
 // All routes require authentication + admin role
@@ -28,5 +32,10 @@ router.get('/recipes', getAllRecipes);
 router.post('/recipes', createRecipe);
 router.put('/recipes/:id', updateRecipe);
 router.delete('/recipes/:id', deleteRecipe);
+
+router.get('/resources', getAllResources);
+router.post('/resources', createResource);
+router.put('/resources/:id', updateResource);
+router.delete('/resources/:id', deleteResource);
 
 module.exports = router;

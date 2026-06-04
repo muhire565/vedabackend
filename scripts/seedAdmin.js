@@ -2,13 +2,24 @@ const User = require('../models/User');
 
 const seedAdmin = async () => {
   try {
+    // 1) Any user already has admin role?
     const adminExists = await User.findOne({ role: 'admin' });
-
     if (adminExists) {
       console.log('✅ Admin user already exists:', adminExists.email);
       return;
     }
 
+    // 2) Admin email exists but without admin role (e.g. schema updated after creation)
+    const userByEmail = await User.findOne({ email: 'admin@medifit.ai' });
+    if (userByEmail) {
+      userByEmail.role = 'admin';
+      await userByEmail.save();
+      console.log('🎉 Existing user promoted to admin:', userByEmail.email);
+      console.log('   Password: Admin@1234  (or whatever you previously set)');
+      return;
+    }
+
+    // 3) Create fresh admin user
     const admin = new User({
       fullName: 'System Admin',
       email: 'admin@medifit.ai',

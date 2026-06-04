@@ -25,9 +25,12 @@ const chat = async (req, res) => {
     // Add user context to the message if available
     let contextualMessage = message;
     if (user && user.onboardingData) {
-      const context = `User Profile:
-- Name: ${user.fullName}
-- Age: ${user.onboardingData.age || 'Not specified'}
+      const firstName = user.fullName?.split(' ')[0] || 'User';
+      const context = `STRICT INSTRUCTION — You MUST personalize this answer. Use the profile below.
+
+User Profile:
+- Name: ${firstName}
+- Age: ${user.onboardingData.age || 'Not specified'} years old
 - Gender: ${user.onboardingData.gender || 'Not specified'}
 - Height: ${user.onboardingData.height || 'Not specified'} cm
 - Weight: ${user.onboardingData.weight || 'Not specified'} kg
@@ -35,6 +38,8 @@ const chat = async (req, res) => {
 - Goal: ${user.onboardingData.goal || 'Not specified'}
 - Medical Conditions: ${user.onboardingData.medicalConditions?.join(', ') || 'None'}
 - Dietary Restrictions: ${user.onboardingData.dietaryRestrictions?.join(', ') || 'None'}
+
+MANDATORY: Start your response with "Hello ${firstName}," then reference 1-2 profile facts before giving advice. Do NOT give generic lists or vague options. Give ONE specific recommendation tied to this profile.
 
 User Question: ${message}`;
       contextualMessage = context;
